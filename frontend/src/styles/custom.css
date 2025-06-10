@@ -1,0 +1,63 @@
+.bg-custom-blue {
+    background-color: #0F4571 !important;
+  }
+
+  .text-primary-custom {
+  color: #0F4571 !important;
+}
+
+  .text-large {
+    font-size: 4rem;
+  }
+
+  .btn-outline-light-blue {
+    background-color: white;
+    color: #0F4571;
+    border: 2px solid #0F4571;
+    font-weight: bold;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.2rem;
+
+  }
+
+  .btn-outline {
+    background-color: #0F4571;
+    color: white;
+    border: 2px solid white;
+    font-weight: bold;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.2rem;
+
+  }
+  
+  .btn-outline-light-blue:hover {
+    background-color: #0F4571;
+    color: white;
+  }
+
+  .bg-info-light {
+  background-color: #D8EDFF;
+}
+
+  .btn-nuevo-chat {
+    background-color: #0F4571;
+    color: white;
+  }
+  .bg-lightblue {
+    background-color: #e0f0ff;
+    color: #000;
+    border-radius: 16px;
+  }
+  .text-primary-custom {
+    color: #003366;
+  }
+  .bg-secondary {
+    background-color: #6c757d !important;
+  }
+  html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
