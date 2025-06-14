@@ -40,6 +40,7 @@ async def generar_reconocimiento_paternidad(
 ):
     # Normalizar nombres
     promovente = promovente.strip().title()
+    menor = menor.strip().title()
     demandado = demandado.strip().title()
     
     fecha = datetime.datetime.now().strftime("%d de %B de %Y")
