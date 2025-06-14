@@ -49,6 +49,10 @@ async def generar_divorcio_voluntario(
     usuario=Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
+    # Normalizar nombres
+    promovente1 = promovente1.strip().title()
+    promovente2 = promovente2.strip().title()
+
     locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
     ciudad = "Ciudad de México" 
     fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")

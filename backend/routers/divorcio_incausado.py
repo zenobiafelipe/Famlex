@@ -51,6 +51,10 @@ async def generar_divorcio_incausado(
     usuario=Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
+    # Normalizar nombres
+    promovente = promovente.strip().title()
+    demandado = demandado.strip().title()
+
     locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
     fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")
     ciudad = "Ciudad de México"

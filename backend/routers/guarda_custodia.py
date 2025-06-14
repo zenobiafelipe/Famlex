@@ -40,6 +40,10 @@ async def generar_guarda_custodia(
     usuario=Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
+    # Normalizar nombres
+    promovente = promovente.strip().title()
+    demandado = demandado.strip().title()
+
     ciudad = "Ciudad de Mexico"
     fecha = datetime.datetime.now().strftime("%d de %B de %Y")
     doc = Document()
