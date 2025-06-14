@@ -53,6 +53,12 @@ async def generar_divorcio_voluntario(
     ciudad = "Ciudad de México" 
     fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")
  
+    try:
+        fecha_dt = datetime.datetime.strptime(fecha_matrimonio, "%Y-%m-%d")
+        fecha_formateada = fecha_dt.strftime("%d de %B de %Y").capitalize()
+    except ValueError:
+        fecha_formateada = fecha_matrimonio  # fallback si la fecha viene en otro formato
+
 
     doc = Document()
     encabezado = doc.add_paragraph()
@@ -91,7 +97,7 @@ async def generar_divorcio_voluntario(
     doc.add_heading("H E C H O S", level=1)
 
     doc.add_paragraph(
-        f"1. Con fecha {fecha_matrimonio} los promoventes contrajimos matrimonio civil conforme a las leyes del Estado de la Ciudad de México, "
+        f"1. Con fecha {fecha_formateada} los promoventes contrajimos matrimonio civil conforme a las leyes del Estado de la Ciudad de México, "
         f"lo que se acredita con el acta correspondiente que se exhibe.\n"
     )
 

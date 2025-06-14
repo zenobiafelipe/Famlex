@@ -28,9 +28,19 @@ async def generar_divorcio_admin(
     db: Session = Depends(get_db)
 
 ):
+        # Normalizar nombres
+    promovente = promovente.strip().title()
+    conyuge = conyuge.strip().title()
+
     locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
     fecha = datetime.datetime.now().strftime("%d de %B de %Y")
     ciudad = "Ciudad de México"
+    try:
+        fecha_dt = datetime.datetime.strptime(fecha_matrimonio, "%Y-%m-%d")
+        fecha_formateada = fecha_dt.strftime("%d de %B de %Y").capitalize()
+    except ValueError:
+        fecha_formateada = fecha_matrimonio  # fallback si la fecha viene en otro formato
+
     doc = Document()
 
     # Encabezado
@@ -53,10 +63,9 @@ async def generar_divorcio_admin(
         f"Que por medio del presente escrito, y con fundamento en el artículo 272 del Código Civil para la Ciudad de México, venimos a solicitar de manera conjunta y de común acuerdo "
         f"el divorcio por la vía administrativa, conforme a los siguientes:\n"
     )
-    
 
     doc.add_heading("H E C H O S", level=1)
-    doc.add_paragraph(f"1. Con fecha {fecha_matrimonio}, contrajimos matrimonio civil ante la autoridad correspondiente en la Ciudad de México, lo cual se acredita con el acta de matrimonio que anexamos al presente escrito.")
+    doc.add_paragraph(f"1. Con fecha {fecha_formateada}, contrajimos matrimonio civil ante la autoridad correspondiente en la Ciudad de México, lo cual se acredita con el acta de matrimonio que anexamos al presente escrito.")
     doc.add_paragraph("2. A la fecha de presentación de esta solicitud, ambos comparecientes somos mayores de edad y manifestamos de forma libre, voluntaria y consciente nuestro deseo de disolver el vínculo matrimonial que nos une.")
     doc.add_paragraph("3. No hemos procreado hijos menores de edad, ni existen personas que dependan económicamente de nosotros.")
     doc.add_paragraph("4. La compareciente manifiesta bajo protesta de decir verdad, que no se encuentra en estado de gravidez.")

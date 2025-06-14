@@ -6,6 +6,7 @@ import iconDoc from "../assets/Icon.png";
 import axiosInstance from "../api/axiosInstance";
 import ErrorMessage from "../components/ErrorMessage"; // Asegúrate de tener esto
 import LegalDisclaimerModal from "../components/LegalDisclaimerModal";
+import SessionExpiredModal from "../components/SessionExpiredModal";
 
 const tipos = [
   { nombre: "Divorcio Administrativo", valor: "divorcio_admin" },
@@ -205,12 +206,6 @@ reconocimiento_paternidad: [
       if (!/^.+?,\s*\d+,\s*.+?,\s*\d{5},\s*.+$/.test(limpio)) return "Formato de dirección inválido (Calle, No., Colonia, CP, Ciudad).";
       break;
 
-    case "fecha":
-    case "fecha_actual":
-    case "fecha_matrimonio":
-    case "fecha_nacimiento":
-      if (!/^\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+\s+de\s+\d{4}$/.test(limpio)) return "Formato de fecha inválido (ej: 25 de mayo de 2025).";
-      break;
     case "regimenadm" :
     case "bienes_comunes" :
     case "tiene_hijos" :
@@ -331,8 +326,6 @@ const handleSubmit = async (e) => {
     return;
   }
 }
-
-
     // Procesar respuestas a preguntas
     const preguntas = tipoSeleccionado ? arboles[tipoSeleccionado] : [];
     const preguntasFiltradas = preguntas.filter(p => {
@@ -486,6 +479,17 @@ const enviarFormulario = async (datosManual = null) => {
     cargarHistorial();
   }, []);
 
+  const [sesionExpirada, setSesionExpirada] = useState(false);
+  useEffect(() => {
+    const handleExpiracion = () => {
+      setSesionExpirada(true);
+    };
+    window.addEventListener("sesionExpirada", handleExpiracion);
+    return () => {
+      window.removeEventListener("sesionExpirada", handleExpiracion);
+    };
+  }, []);
+
   return (
   <div className="d-flex" style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
     {/* Sidebar */}
@@ -557,6 +561,15 @@ const enviarFormulario = async (datosManual = null) => {
       {/* Formulario de respuesta */}
       <form onSubmit={handleSubmit} className="w-100 d-flex justify-content-center">
         <div className="d-flex border rounded-pill px-3 py-2 w-100" style={{ maxWidth: "800px" }}>
+          {preguntaActual?.campo?.includes("fecha") ? (
+            <input
+              className="form-control border-0 me-2"
+              type="date"
+              value={mensaje}
+              onChange={(e) => setMensaje(e.target.value)}
+              required
+            />
+          ) : (
           <input
             className="form-control border-0 me-2"
             type="text"
@@ -564,7 +577,7 @@ const enviarFormulario = async (datosManual = null) => {
             onChange={(e) => setMensaje(e.target.value)}
             placeholder="Escribe tu respuesta"
             required
-          />
+          />)}
           <button type="submit" className="btn p-0 border-0 bg-transparent">
             <img src={iconSend} alt="Enviar" width="20" />
           </button>
@@ -572,7 +585,7 @@ const enviarFormulario = async (datosManual = null) => {
       </form>
     </div>
     <LegalDisclaimerModal visible={mostrarAviso} onClose={cerrarAviso} />
-
+    <SessionExpiredModal visible={sesionExpirada} />
   </div>
   
 );

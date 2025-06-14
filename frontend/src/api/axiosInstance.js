@@ -12,5 +12,17 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
+// Interceptor de respuesta: detecta token expirado
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Borra el token y lanza evento personalizado
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("sesionExpirada"));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default axiosInstance;

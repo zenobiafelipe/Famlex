@@ -40,6 +40,13 @@ async def generar_reconocimiento_paternidad(
 ):
     fecha = datetime.datetime.now().strftime("%d de %B de %Y")
     ciudad = "Ciudad de México"
+
+    try:
+        fecha_dt = datetime.datetime.strptime(fecha_nacimiento, "%Y-%m-%d")
+        fecha_formateada = fecha_dt.strftime("%d de %B de %Y").capitalize()
+    except ValueError:
+        fecha_formateada = fecha_nacimiento  # fallback si la fecha viene en otro formato
+
     doc = Document()
 
     header = doc.add_paragraph()
@@ -65,7 +72,7 @@ async def generar_reconocimiento_paternidad(
     doc.add_paragraph("4. El pago de costas procesales.")
 
     doc.add_heading("H E C H O S", level=1)
-    doc.add_paragraph(f"1. La menor {menor} nació el {fecha_nacimiento}.")
+    doc.add_paragraph(f"1. La menor {menor} nació el {fecha_formateada}.")
     doc.add_paragraph(f"2. Sostuve una relación de tipo {tipo_relacion} con el demandado durante el periodo {periodo_relacion}.")
     doc.add_paragraph(f"3. Considero que es el padre de la menor porque {motivo}.")
 

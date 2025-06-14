@@ -54,6 +54,13 @@ async def generar_divorcio_incausado(
     locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
     fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")
     ciudad = "Ciudad de México"
+
+    try:
+        fecha_dt = datetime.datetime.strptime(fecha_matrimonio, "%Y-%m-%d")
+        fecha_formateada = fecha_dt.strftime("%d de %B de %Y").capitalize()
+    except ValueError:
+        fecha_formateada = fecha_matrimonio  # fallback si la fecha viene en otro formato
+
     
 
     doc = Document()
@@ -114,7 +121,7 @@ async def generar_divorcio_incausado(
     num_hecho = 1
 
     doc.add_paragraph(
-        f"{num_hecho}. Con fecha {fecha_matrimonio}, el promovente contrajo matrimonio civil con el C. {demandado}, lo cual acredito con copia certificada del acta de matrimonio, "
+        f"{num_hecho}. Con fecha {fecha_formateada}, el promovente contrajo matrimonio civil con el C. {demandado}, lo cual acredito con copia certificada del acta de matrimonio, "
         f"misma que se exhibe y se anexa para efectos legales correspondientes.\n"
     )
     num_hecho += 1
