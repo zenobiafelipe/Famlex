@@ -59,5 +59,35 @@
   margin: 0;
   padding: 0;
 }
+/* Estilo visual del autocompletado de Google Places */
+.pac-container {
+  z-index: 1055 !important;
+  position: absolute !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: 1rem !important;
+  max-height: 220px !important;
+  overflow-y: auto !important;
+  scrollbar-width: none; /* Firefox */
+}
 
+.pac-container::-webkit-scrollbar {
+  display: none; /* Chrome */
+}
 
+.pac-item {
+  padding: 0.6rem 1rem !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+.pac-item:hover {
+  background-color: #e2e6ea !important;
+  cursor: pointer;
+}
+/* ancho fijo para todas las burbujas del chat */
+.chat-bubble {
+  width: 300px;       /* o el ancho que prefieras */
+  max-width: 100%;    /* para que no desborde en pantallas chicas */
+  word-wrap: break-word; /* quiebra líneas largas */
+}

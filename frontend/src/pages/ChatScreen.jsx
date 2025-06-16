@@ -7,6 +7,7 @@ import axiosInstance from "../api/axiosInstance";
 import ErrorMessage from "../components/ErrorMessage"; // Asegúrate de tener esto
 import LegalDisclaimerModal from "../components/LegalDisclaimerModal";
 import SessionExpiredModal from "../components/SessionExpiredModal";
+import AutocompleteInput from "../components/AutocompleteInput"; // al inicio del archivo
 
 const tipos = [
   { nombre: "Divorcio Administrativo", valor: "divorcio_admin" },
@@ -66,7 +67,7 @@ export default function ChatScreen() {
       { campo: "promovente", texto: "Nombre del promovente:" },
       { campo: "conyuge", texto: "Nombre del cónyuge:" },
       { campo: "direccion", texto: "Dirección del promovente:" },
-      { campo: "fecha_matrimonio", texto: "Fecha de celebración del matrimonio (ej: 15 de mayo de 2025):" },
+      { campo: "fecha_matrimonio", texto: "Fecha de celebración del matrimonio:" },
       { campo: "regimenadm", texto: "¿El matrimonio fue bajo sociedad conyugal? (Sí / No)", opciones: ["Sí", "No"] }
     ],
 
@@ -195,17 +196,6 @@ reconocimiento_paternidad: [
       if (!/^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/.test(limpio)) return "El texto ingresado no debe contener números ni símbolos.";
       break;
 
-    case "direccion":
-    case "direccion_promovente":
-    case "domicilio_hijos":
-    case "domicilio_demandado_si" :
-    case "domicilio_demandado_no" :
-    case "domicilio_demandado":
-    case "ultimo_domicilio":
-    case "domicilio_menor":  
-      if (!/^.+?,\s*\d+,\s*.+?,\s*\d{5},\s*.+$/.test(limpio)) return "Formato de dirección inválido (Calle, No., Colonia, CP, Ciudad).";
-      break;
-
     case "regimenadm" :
     case "bienes_comunes" :
     case "tiene_hijos" :
@@ -288,6 +278,15 @@ reconocimiento_paternidad: [
 
   const preguntaActual = preguntasFiltradas[indice] || null;
 
+  const toTitleCase = (str) => {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .map(word => word[0].toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -309,7 +308,7 @@ const handleSubmit = async (e) => {
     setMensaje("");
     return;
   }
-
+  // Fase de confirmación final
   if (fase === "confirmacion") {
   const respuesta = clean.toLowerCase();
   if (respuesta === "sí" || respuesta === "si") {
@@ -319,13 +318,14 @@ const handleSubmit = async (e) => {
     setConversacion([
       ...conversacion,
       { de: "usuario", texto: mensaje },
-      { de: "bot", texto: "❌ Generación de documento cancelada. Puedes iniciar otra demanda si lo deseas." }
+      { de: "bot", texto: "Generación de documento cancelada. Puedes iniciar otra demanda si lo deseas." }
     ]);
     setFase("inicio");
     setMensaje("");
     return;
   }
 }
+
     // Procesar respuestas a preguntas
     const preguntas = tipoSeleccionado ? arboles[tipoSeleccionado] : [];
     const preguntasFiltradas = preguntas.filter(p => {
@@ -333,10 +333,10 @@ const handleSubmit = async (e) => {
       return respuestas[p.dependeDe] === p.valor;
     });
     const preguntaActual = preguntasFiltradas[indice];
-
     let valor = clean;
+    
 
-  // ✅ Solo valida opciones si realmente existen
+  // Solo valida opciones si realmente existen
   if (Array.isArray(preguntaActual.opciones) && preguntaActual.opciones.length > 0) {
     const match = preguntaActual.opciones.find(opt => opt === clean);
     if (match) {
@@ -346,7 +346,7 @@ const handleSubmit = async (e) => {
       setConversacion([
         ...conversacion,
         { de: "usuario", texto: clean },
-        { de: "bot", texto: `❌ Respuesta inválida. Por favor responde con una de las siguientes opciones: ${preguntaActual.opciones.join(" / ")}` }
+        { de: "bot", texto: `Respuesta inválida. Por favor responde con una de las siguientes opciones: ${preguntaActual.opciones.join(" / ")}` }
       ]);
       setMensaje("");
       return;
@@ -523,7 +523,7 @@ const enviarFormulario = async (datosManual = null) => {
       </div>
 
       {/* Conversación */}
-      <div className="flex-grow-1 overflow-auto w-100 mb-4" style={{ maxWidth: "800px" }}>
+      <div className="flex-grow-1 overflow-y-auto w-100 mb-3" style={{ maxHeight: "65vh", maxWidth: "800px" }}>
         {conversacion.map((msg, i) => (
           <div
             key={i}
@@ -532,12 +532,13 @@ const enviarFormulario = async (datosManual = null) => {
             {msg.de === "bot" ? (
               <div className="d-flex align-items-start">
                 <img src={iconDoc} alt="bot" width={40} className="me-2" />
-                <div className="bg-white text-primary-custom p-3 rounded shadow-sm border" style={{ maxWidth: "70%" }}>
+                {/* Burbujas de bot */}
+                <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
                   {msg.texto}
                 </div>
               </div>
             ) : (
-              <div className="bg-lightblue p-3 rounded shadow-sm text-dark" style={{ maxWidth: "70%" }}>
+              <div className="bg-lightblue p-3 rounded shadow-sm text-dark chat-bubble" >
                 {msg.texto}
               </div>
             )}
@@ -549,7 +550,7 @@ const enviarFormulario = async (datosManual = null) => {
           <div className="mb-3 d-flex justify-content-start">
             <div className="d-flex align-items-start">
               <img src={iconDoc} alt="bot" width={40} className="me-2" />
-              <div className="bg-white text-primary-custom p-3 rounded shadow-sm border" style={{ maxWidth: "70%" }}>
+              <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
                 {preguntaActual.texto}
               </div>
             </div>
@@ -559,8 +560,8 @@ const enviarFormulario = async (datosManual = null) => {
       </div>
 
       {/* Formulario de respuesta */}
-      <form onSubmit={handleSubmit} className="w-100 d-flex justify-content-center">
-        <div className="d-flex border rounded-pill px-3 py-2 w-100" style={{ maxWidth: "800px" }}>
+      <form onSubmit={handleSubmit} className="w-100 d-flex justify-content-center mt-2">
+        <div className="d-flex align-items-center border rounded-pill px-3 py-2 shadow-sm" style={{ maxWidth: "700px", width: "100%", backgroundColor: "#fff"  }}>
           {preguntaActual?.campo?.includes("fecha") ? (
             <input
               className="form-control border-0 me-2"
@@ -568,6 +569,12 @@ const enviarFormulario = async (datosManual = null) => {
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
               required
+            />
+          ) : preguntaActual?.campo?.includes("direccion") ? (
+            <AutocompleteInput
+              value={mensaje}
+              onChange={(val) => setMensaje(val)}
+              placeholder="Escribe la dirección completa"
             />
           ) : (
           <input
