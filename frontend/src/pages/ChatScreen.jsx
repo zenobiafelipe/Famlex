@@ -8,6 +8,7 @@ import ErrorMessage from "../components/ErrorMessage"; // Asegúrate de tener es
 import LegalDisclaimerModal from "../components/LegalDisclaimerModal";
 import SessionExpiredModal from "../components/SessionExpiredModal";
 import AutocompleteInput from "../components/AutocompleteInput"; // al inicio del archivo
+import TypingDots from "../components/TypingDots";
 
 const tipos = [
   { nombre: "Divorcio Administrativo", valor: "divorcio_admin" },
@@ -41,7 +42,7 @@ export default function ChatScreen() {
     de: "bot",
     texto: (
       <div>
-        <p className="mb-2 text-primary-custom fw-semibold">Bienvenido a FamLex! Elige el tipo de demanda legal que deseas generar:</p>
+        <p className="mb-2 text-primary-custom fw-semibold">Bienvenido a FamLex! Ingresa el número del tipo de escrito inicial que deseas generar:</p>
         <ol className="mb-0 ps-3 text-primary-custom">
           {tipos.map((t, i) => (
             <li key={i}>{t.nombre}</li>
@@ -51,7 +52,7 @@ export default function ChatScreen() {
     )
   }
 ]);
-  
+  const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [indice, setIndice] = useState(0);
   const [error, setError] = useState("");
@@ -74,18 +75,18 @@ export default function ChatScreen() {
     divorcio_voluntario: [
       { campo: "promovente1", texto: "Nombre del promovente 1:" },
       { campo: "promovente2", texto: "Nombre del promovente 2:" },
-      { campo: "direccion_promovente", texto: "Dirección para notificaciones :" },
-      { campo: "fecha_matrimonio", texto: "Fecha de celebración del matrimonio:" },
-      { campo: "cuantos_abogados", texto: "¿Cuántos abogados deseas registrar?" },
-      { campo: "abogados", texto: "Nombres y cédulas de los abogados (ej. Juan Pérez:1234567; María Ruiz:7654321):" },
+      { campo: "direccion_promovente", texto: "Dirección para notificaciones " },
+      { campo: "fecha_matrimonio", texto: "Fecha de celebración del matrimonio" },
+      { campo: "desea_agregar_otros_abogados", texto: "¿Deseas agregar más abogados?", opciones: ["Sí", "No"] },
+      { campo: "abogados", texto: "Nombres y cédulas de los abogados ", dependeDe: "desea_agregar_otros_abogados", valor: "Sí" },
       { campo: "regimen_matrimonial", texto: "¿Régimen patrimonial del matrimonio? (Sociedad conyugal / Separación de bienes)", opciones: ["Sociedad conyugal", "Separación de bienes"] },
       { campo: "bienes_comunes", texto: "¿Se adquirieron bienes durante el matrimonio? (Sí / No)", dependeDe: "regimen_matrimonial", valor: "Sociedad conyugal" },
       { campo: "total_bienes", texto: "¿Cuántos bienes se declararán?:", dependeDe: "bienes_comunes", valor: "Sí" },
       { campo: "lista_bienes", texto: "Lista de bienes (ej. casa:50:50; auto:70:30):", dependeDe: "bienes_comunes", valor: "Sí" },
       { campo: "tiene_hijos", texto: "¿Tienen hijos menores o incapaces? (Sí / No)", opciones: ["Sí", "No"] },
-      { campo: "hijos_info", texto: "Nombres y edades de los hijos (ej. Pedro:5; Ana:7):", dependeDe: "tiene_hijos", valor: "Sí" },
+      { campo: "hijos_info", texto: "Nombres y edades de los hijos", dependeDe: "tiene_hijos", valor: "Sí" },
       { campo: "quien_guarda", texto: "¿Quién solicita la guarda y custodia de los menores?", dependeDe: "tiene_hijos", valor: "Sí" },
-      { campo: "domicilio_hijos", texto: "Dirección donde vivirán los hijos:", dependeDe: "tiene_hijos", valor: "Sí" },
+      { campo: "direccion_hijos", texto: "Dirección donde vivirán los hijos:", dependeDe: "tiene_hijos", valor: "Sí" },
       { campo: "frecuencia_visitas", texto: "¿Cada cuánto serán las convivencias del otro progenitor? (ej. cada 15 días):", dependeDe: "tiene_hijos", valor: "Sí" },
       { campo: "horario_visitas", texto: "¿Horario de visitas? (ej. 10:00 a 18:00):", dependeDe: "tiene_hijos", valor: "Sí" },
       { campo: "porcentaje_alimentos", texto: "¿Qué porcentaje del ingreso se otorgará como pensión alimenticia?:", dependeDe: "tiene_hijos", valor: "Sí" },
@@ -101,22 +102,22 @@ export default function ChatScreen() {
       { campo: "promovente", texto: "Nombre del promovente:" },
       { campo: "demandado", texto: "Nombre del demandado:" },
       { campo: "direccion_promovente", texto: "Dirección del promovente:" },
-      { campo: "cuantos_abogados", texto: "¿Cuántos abogados deseas registrar?" },
-      { campo: "abogados", texto: "Nombres y cédulas de los abogados (ej. Juan Pérez:1234567; María Ruiz:7654321):" },
+      { campo: "desea_agregar_otros_abogados", texto: "¿Deseas agregar más abogados?", opciones: ["Sí", "No"] },
+      { campo: "abogados", texto: "Nombres y cédulas de los abogados ", dependeDe: "desea_agregar_otros_abogados", valor: "Sí" },
       { campo: "conoce_domicilio", texto: "¿Conoce el domicilio particular del demandado? (Sí / No)", opciones: ["Sí", "No"] },
-      { campo: "domicilio_demandado_si", texto: "Domicilio del demandado :", dependeDe: "conoce_domicilio", valor: "Sí"},
-      { campo: "domicilio_demandado_no", texto: "Domicilio donde puede ser notificado (ej. trabajo, negocio):", dependeDe: "conoce_domicilio", valor: "No"},
+      { campo: "direccion_demandado_si", texto: "Domicilio del demandado :", dependeDe: "conoce_domicilio", valor: "Sí"},
+      { campo: "direccion_demandado_no", texto: "Domicilio donde puede ser notificado (ej. trabajo, negocio):", dependeDe: "conoce_domicilio", valor: "No"},
       { campo: "fecha_matrimonio", texto: "Fecha de celebración del matrimonio (ej: 03 de abril de 2008):" },
-      { campo: "regimen", texto: "Régimen matrimonial (Sociedad conyugal / Separación de bienes):", opciones: ["Sociedad conyugal", "Separación de bienes"] },
+      { campo: "regimen_matrimonial", texto: "Régimen matrimonial (Sociedad conyugal / Separación de bienes):", opciones: ["Sociedad conyugal", "Separación de bienes"] },
       { campo: "bienes", texto: "¿Se adquirieron bienes durante el matrimonio? (Sí / No)", opciones: ["Sí", "No"], dependeDe: "regimen", valor: "Sociedad conyugal" },
       { campo: "total_bienes", texto: "¿Cuántos bienes se declararán?:", dependeDe: "bienes_comunes", valor: "Sí" },
       { campo: "lista_bienes", texto: "Lista de bienes y porcentajes:", dependeDe: "bienes", valor: "Sí" },
       { campo: "proteccion", texto: "¿Desea solicitar orden de protección contra el demandado? (Sí / No)", opciones: ["Sí", "No"] },
-      { campo: "ultimo_domicilio", texto: "Último domicilio conyugal:" },
+      { campo: "direccion_ultimo", texto: "Último domicilio conyugal:" },
       { campo: "fecha_separacion", texto: "Fecha aproximada de separación (ej: marzo de 2023):" },
       { campo: "hijos", texto: "¿Procrearon hijos? (Sí / No)", opciones: ["Sí", "No"] },
       { campo: "hijos_info", texto: "Nombres y edades de los hijos:", dependeDe: "hijos", valor: "Sí" },
-      { campo: "guarda_domicilio", texto: "Dirección donde vivirán los hijos:", dependeDe: "hijos", valor: "Sí" },
+      { campo: "direccion_guarda", texto: "Dirección donde vivirán los hijos:", dependeDe: "hijos", valor: "Sí" },
       { campo: "incluir_guardia", texto: "¿Desea incluir guarda y custodia? (Sí / No)", opciones: ["Sí", "No"], dependeDe: "hijos", valor: "Sí" },
       { campo: "guarda_titular", texto: "¿Quién tendrá la guarda y custodia de los menores?", dependeDe: "incluir_guardia", valor: "Sí" },
       { campo: "visitas_frecuencia", texto: "Frecuencia de convivencias (ej. 15 días):", dependeDe: "incluir_guardia", valor: "Sí" },
@@ -127,35 +128,35 @@ export default function ChatScreen() {
 
     pension_alimenticia: [
       { campo: "promovente", texto: "Nombre del promovente:" },
-      { campo: "parentesco", texto: "¿Qué relación tiene con los menores? (padre, madre, tutor):" },
-      { campo: "menores", texto: "Nombres y edades de los menores:" },
-      { campo: "direccion", texto: "Dirección del promovente:" },
-      { campo: "demandado", texto: "Nombre del demandado:" },
-      { campo: "ingresos", texto: "¿Cuál es el sueldo aproximado del demandado al mes?:" },
-      { campo: "cuantos_abogados", texto: "¿Cuántos abogados deseas registrar?" },
-      { campo: "abogados", texto: "Nombres y cédulas de los abogados:" },
+      { campo: "parentesco", texto: "¿Qué relación tiene con los menores? (padre, madre, tutor)" },
+      { campo: "hijos_info", texto: "Nombres y edades de los menores" },
+      { campo: "direccion", texto: "Dirección del promovente" },
+      { campo: "demandado", texto: "Nombre del demandado" },
+      { campo: "desea_agregar_otros_abogados", texto: "¿Deseas agregar más abogados?", opciones: ["Sí", "No"] },
+      { campo: "abogados", texto: "Nombres y cédulas de los abogados ", dependeDe: "desea_agregar_otros_abogados", valor: "Sí" }, 
+      { campo: "ingresos", texto: "¿Cuál es el sueldo aproximado del demandado al mes?" },
       { campo: "incumplimiento", texto: "¿Ha incumplido con su obligación? (Sí / No)", opciones: ["Sí", "No"] },
       { campo: "retroactivos", texto: "¿Solicita pensión retroactiva? (Sí / No)", opciones: ["Sí", "No"] },
       { campo: "medidas", texto: "¿Solicita medidas precautorias? (Sí / No)", opciones: ["Sí", "No"] }
     ],
 
 guarda_custodia: [
-  { campo: "promovente", texto: "Nombre del promovente:" },
-  { campo: "parentesco", texto: "¿Qué relación tiene con los menores? (padre, madre, tutor):" },
-  { campo: "menores", texto: "Nombres y edades de los menores:" },
-  { campo: "direccion_promovente", texto: "Dirección del promovente:" },
-  { campo: "demandado", texto: "Nombre del demandado:" },
+  { campo: "promovente", texto: "Nombre del promovente" },
+  { campo: "parentesco", texto: "¿Qué relación tiene con los menores? (padre, madre, tutor)" },
+  { campo: "menores", texto: "Nombres y edades de los menores" },
+  { campo: "direccion_promovente", texto: "Dirección del promovente" },
+  { campo: "demandado", texto: "Nombre del demandado" },
   { campo: "conoce_domicilio", texto: "¿Conoce el domicilio del demandado? (Sí / No)", opciones: ["Sí", "No"] },
-  { campo: "domicilio_demandado", texto: "Domicilio del demandado :", dependeDe: "conoce_domicilio", valor: "Sí" },
-  { campo: "domicilio_demandado_no", texto: "Domicilio donde puede ser notificado (ej. trabajo, negocio):", dependeDe: "conoce_domicilio", valor: "No" },
-  { campo: "cuantos_abogados", texto: "¿Cuántos abogados deseas registrar?" },
-  { campo: "abogados", texto: "Nombres y cédulas de los abogados:" },  
+  { campo: "direccion_demandado", texto: "Domicilio del demandado ", dependeDe: "conoce_domicilio", valor: "Sí" },
+  { campo: "direccion_demandado_no", texto: "Domicilio donde puede ser notificado (ej. trabajo, negocio)", dependeDe: "conoce_domicilio", valor: "No" },
+  { campo: "desea_agregar_otros_abogados", texto: "¿Deseas agregar más abogados?", opciones: ["Sí", "No"] },
+  { campo: "abogados", texto: "Nombres y cédulas de los abogados", dependeDe: "desea_agregar_otros_abogados", valor: "Sí" }, 
   { campo: "tipo_relacion", texto: "¿Qué tipo de relación tuvo con el demandado? (ej. concubinato, matrimonio, noviazgo):" },
   { campo: "tiempo_convivencia", texto: "¿Durante cuánto tiempo convivieron? (ej. enero 2019 - abril 2023):" },
   { campo: "desea_visitas", texto: "¿Desea establecer régimen de convivencias? (Sí / No)", opciones: ["Sí", "No"] },
-  { campo: "visitas", texto: "¿Qué régimen de visitas propone? (ej. fines de semana, vacaciones, etc.):", dependeDe: "desea_visitas", valor: "Sí" },
+  { campo: "visitas", texto: "¿Qué régimen de visitas propone? (ej. fines de semana, vacaciones, etc.)", dependeDe: "desea_visitas", valor: "Sí" },
   { campo: "restricciones", texto: "¿Solicita restricciones en las visitas? (Sí / No)", opciones: ["Sí", "No"], dependeDe: "desea_visitas", valor: "Sí" },
-  { campo: "motivo_guarda", texto: "Explique brevemente por qué solicita la guarda y custodia:" }
+  { campo: "motivo_guarda", texto: "Explique brevemente por qué solicita la guarda y custodia" }
 ],
 
 reconocimiento_paternidad: [
@@ -164,6 +165,8 @@ reconocimiento_paternidad: [
   { campo: "edad_menor", texto: "Edad del menor:" },
   { campo: "fecha_nacimiento", texto: "Fecha de nacimiento del menor:" },
   { campo: "direccion", texto: "Dirección del promovente :" },
+  { campo: "desea_agregar_otros_abogados", texto: "¿Deseas agregar más abogados?", opciones: ["Sí", "No"] },
+  { campo: "abogados", texto: "Nombres y cédulas de los abogados (ej. Juan Pérez:1234567; María Ruiz:7654321):", dependeDe: "desea_agregar_otros_abogados", valor: "Sí" },
   { campo: "demandado", texto: "Nombre del presunto padre:" },
   { campo: "tipo_relacion", texto: "Tipo de relación que existió (noviazgo, concubinato, otro):" },
   { campo: "periodo_relacion", texto: "Periodo aproximado en que ocurrió la relación (ej. junio 2019 - marzo 2020):" },
@@ -172,14 +175,14 @@ reconocimiento_paternidad: [
   { campo: "trabajo", texto: "¿Dónde trabaja el demandado?", dependeDe: "conoce_trabajo", valor: "Sí" },
   { campo: "direccion_trabajo", texto: "Dirección del trabajo del demandado:", dependeDe: "conoce_trabajo", valor: "Sí" },
   { campo: "ingreso", texto: "Ingreso mensual aproximado del demandado:", dependeDe: "conoce_trabajo", valor: "Sí" },
-  { campo: "domicilio", texto: "¿Dónde vive actualmente el demandado?" },
+  { campo: "direccion_demandado", texto: "¿Dónde vive actualmente el demandado?" },
   { campo: "solicita_pension", texto: "¿Desea solicitar pensión alimenticia? (Sí / No)", opciones: ["Sí", "No"] },
   { campo: "porcentaje", texto: "¿Qué porcentaje de los ingresos solicita como pensión?", dependeDe: "solicita_pension", valor: "Sí" },
-  { campo: "incumplimiento", texto: "¿Desde cuándo no ha cumplido con la obligación alimentaria?", dependeDe: "solicita_pension", valor: "Sí" },
+  { campo: "fecha_incumplimiento", texto: "¿Desde cuándo no ha cumplido con la obligación alimentaria?", dependeDe: "solicita_pension", valor: "Sí" },
   { campo: "prueba_adn", texto: "¿Desea solicitar prueba de ADN? (Sí / No)", opciones: ["Sí", "No"] },
-  { campo: "testigos", texto: "¿Desea indicar testigos? (escriba nombres separados por coma, o deje vacío si no aplica)" }
+  { campo: "desea_testigos", texto: "¿Desea indicar testigos? (Sí / No)", opciones: ["Sí", "No"] },
+  { campo: "testigos", texto: "Indique los nombres completos de los testigos (separados por coma):", dependeDe: "desea_testigos", valor: "Sí" }
 ]
-
   };
 
   const validarCampo = (campo, valor) => {
@@ -192,7 +195,10 @@ reconocimiento_paternidad: [
     case "promovente1":
     case "promovente2":
     case "demandado":
-    case "ciudad":  
+    case "quien_guarda":
+    case "uso_domicilio":
+    case "guarda_titular":
+    case "menor":
       if (!/^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/.test(limpio)) return "El texto ingresado no debe contener números ni símbolos.";
       break;
 
@@ -261,23 +267,7 @@ reconocimiento_paternidad: [
 };
 
   const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-
-  const debeMostrarPregunta = (pregunta) => {
-    if (!pregunta.dependeDe) return true;
-    const valorPadre = respuestas[pregunta.dependeDe] || "";
-    return valorPadre === pregunta.valor;
-  };
-
-
-  const preguntas = tipoSeleccionado ? arboles[tipoSeleccionado] : [];
-
-  const preguntasFiltradas = preguntas.filter(p => {
-    if (!p.dependeDe) return true;
-    return respuestas[p.dependeDe] === p.valor;
-  });
-
-  const preguntaActual = preguntasFiltradas[indice] || null;
-
+/*MAYUSCULAS TODOS LOS NOMBRES QUE SE INGRESEN */
   const toTitleCase = (str) => {
     return str
       .toLowerCase()
@@ -286,45 +276,82 @@ reconocimiento_paternidad: [
       .map(word => word[0].toUpperCase() + word.slice(1))
       .join(" ");
   };
+/*CAMBIA si, SI, NO, no por los aceptados SÍ y No */
+  const normalizarSiNo = (str) => {
+  const limpio = str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+      .trim()
+      .toLowerCase();
 
+    if (limpio === "si" || limpio === "sí") return "Sí";
+    if (limpio === "no") return "No";
+    return str; // si no es una de esas opciones, devuelve el original
+  };
+/*Normaliza Sociedad conyugal y separación de bienes*/
+  const normalizarRegimen = (str) => {
+  const limpio = str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // elimina tildes
+      .toLowerCase()
+      .trim();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!mensaje) return;
-  const clean = mensaje.trim().replace(".", "");
+    if (limpio === "sociedad conyugal") return "Sociedad conyugal";
+    if (limpio === "separacion de bienes") return "Separación de bienes";
+    return str;
+  };
 
-  // Fase inicial: selección de tipo de demanda
-  if (fase === "inicio") {
-    const opcion = parseInt(clean);
-    if (!opcion || opcion < 1 || opcion > tipos.length) return;
-    const tipo = tipos[opcion - 1];
-    setTipoSeleccionado(tipo.valor);
-    setFase("preguntas");
-    setConversacion([
-      ...conversacion,
-      { de: "usuario", texto: mensaje },
-      { de: "bot", texto: "Tipo de demanda seleccionado: " + tipo.nombre }
-    ]);
-    setMensaje("");
-    return;
+  const debeMostrarPregunta = (pregunta) => {
+    if (!pregunta.dependeDe) return true;
+    const valorPadre = respuestas[pregunta.dependeDe] || "";
+    return valorPadre === pregunta.valor;
+  };
+
+  const preguntas = tipoSeleccionado ? arboles[tipoSeleccionado] : [];
+  const preguntasFiltradas = preguntas.filter(p => {
+    if (!p.dependeDe) return true;
+    return respuestas[p.dependeDe] === p.valor;
+  });
+
+  const preguntaActual = preguntasFiltradas[indice] || null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!mensaje) return;
+    const clean = mensaje.trim().replace(".", "");
+
+    // Fase inicial: selección de tipo de demanda
+    if (fase === "inicio") {
+      const opcion = parseInt(clean);
+      if (!opcion || opcion < 1 || opcion > tipos.length) return;
+      const tipo = tipos[opcion - 1];
+      setTipoSeleccionado(tipo.valor);
+      setFase("preguntas");
+      setConversacion([
+        ...conversacion,
+        { de: "usuario", texto: mensaje },
+        { de: "bot", texto: "Tipo de demanda seleccionado: " + tipo.nombre }
+      ]);
+      setMensaje("");
+      return;
+    }
+    // Fase de confirmación final
+    if (fase === "confirmacion") {
+    const respuesta = clean.toLowerCase();
+    if (respuesta === "sí" || respuesta === "si") {
+      setFase("finalizado");
+      return enviarFormulario(respuestas);
+    } else {
+      setConversacion([
+        ...conversacion,
+        { de: "usuario", texto: mensaje },
+        { de: "bot", texto: "Generación de documento cancelada. Puedes iniciar otra demanda si lo deseas." }
+      ]);
+      setFase("inicio");
+      setMensaje("");
+      return;
+    }
   }
-  // Fase de confirmación final
-  if (fase === "confirmacion") {
-  const respuesta = clean.toLowerCase();
-  if (respuesta === "sí" || respuesta === "si") {
-    setFase("finalizado");
-    return enviarFormulario(respuestas);
-  } else {
-    setConversacion([
-      ...conversacion,
-      { de: "usuario", texto: mensaje },
-      { de: "bot", texto: "Generación de documento cancelada. Puedes iniciar otra demanda si lo deseas." }
-    ]);
-    setFase("inicio");
-    setMensaje("");
-    return;
-  }
-}
 
     // Procesar respuestas a preguntas
     const preguntas = tipoSeleccionado ? arboles[tipoSeleccionado] : [];
@@ -334,13 +361,21 @@ const handleSubmit = async (e) => {
     });
     const preguntaActual = preguntasFiltradas[indice];
     let valor = clean;
-    
+    valor = normalizarSiNo(valor);
 
+  // Normaliza régimen matrimonial si corresponde
+  if (preguntaActual.campo === "regimen_matrimonial") {
+    valor = normalizarRegimen(valor);
+  }
+  // Aplica formato título si el campo es de nombre
+  const camposNombre = ["promovente", "conyuge", "promovente1", "promovente2", "demandado", "menor", "quien_guarda", "uso_domicilio", "guarda_titular", "testigos"];
+  if (camposNombre.includes(preguntaActual.campo)) {
+    valor = toTitleCase(valor);
+  }
   // Solo valida opciones si realmente existen
   if (Array.isArray(preguntaActual.opciones) && preguntaActual.opciones.length > 0) {
-    const match = preguntaActual.opciones.find(opt => opt === clean);
+    const match = preguntaActual.opciones.find(opt => opt === valor);
     if (match) {
-      valor = match;
       setMensaje(match);
     } else {
       setConversacion([
@@ -353,8 +388,8 @@ const handleSubmit = async (e) => {
     }
   }
 
-  // ✅ Validación ANTES de guardar y avanzar
-  const errorValidacion = validarCampo(preguntaActual.campo, clean);
+  //Validación ANTES de guardar y avanzar
+  const errorValidacion = validarCampo(preguntaActual.campo, valor);
   console.log("Campo:", preguntaActual.campo, "Valor limpio:", clean, "Error:", errorValidacion);
   if (errorValidacion) {
     setError(errorValidacion);
@@ -362,22 +397,42 @@ const handleSubmit = async (e) => {
   }
   setError("");
 
-  const nuevaConversacion = [
+  // Mostrar texto formateado
+  let nuevaConversacion = [
     ...conversacion,
-    { de: "bot", texto: preguntaActual.texto },
-    { de: "usuario", texto: mensaje }
+    { de: "bot", texto: preguntaActual.texto }, // pregunta actual
+    { de: "usuario", texto: valor }
   ];
 
+  // Verifica si la siguiente pregunta será "desea_agregar_otros_abogados"
   const nuevasRespuestas = { ...respuestas, [preguntaActual.campo]: valor };
-  setRespuestas(nuevasRespuestas);
-  setConversacion(nuevaConversacion);
-  setMensaje("");
-
-  // ✅ Generar documento si es la última pregunta
   const nuevasFiltradas = preguntas.filter(p => {
     if (!p.dependeDe) return true;
     return nuevasRespuestas[p.dependeDe] === p.valor;
   });
+
+  const siguientePregunta = nuevasFiltradas[indice + 1];
+
+  if (siguientePregunta?.campo === "desea_agregar_otros_abogados") {
+    nuevaConversacion.push({
+      de: "bot",
+      texto: "Ya se ha agregado automáticamente tu nombre y cédula profesional como abogado promovente."
+    });
+  }
+  // 🚀 Agregar AQUI los avisos según el campo:
+  if (siguientePregunta?.campo === "abogados") {
+    const aviso = "Debes escribir los abogados en el siguiente formato: Nombre:1234567; Nombre2:7654321";
+    nuevaConversacion.push({ de: "bot", texto: aviso });
+  }
+
+  if (siguientePregunta?.campo === "hijos_info") {
+    const aviso = "Debes escribir los hijos en el siguiente formato: Nombre:Edad; Nombre2:Edad";
+    nuevaConversacion.push({ de: "bot", texto: aviso });
+  }
+
+  setRespuestas(nuevasRespuestas);
+  setConversacion(nuevaConversacion);
+  setMensaje("");
 
   if (indice + 1 >= nuevasFiltradas.length) {
     setFase("resumen");
@@ -385,6 +440,7 @@ const handleSubmit = async (e) => {
   }
 
   setIndice(indice + 1);
+
 };
 
 const enviarFormulario = async (datosManual = null) => {
@@ -400,7 +456,7 @@ const enviarFormulario = async (datosManual = null) => {
   for (let pair of formData.entries()) {
     console.log(`${pair[0]}: ${pair[1]}`);
   }
-
+  setCargando(true);
   try {
     const token = localStorage.getItem("token");
     const res = await axiosInstance.post(
@@ -425,7 +481,9 @@ const enviarFormulario = async (datosManual = null) => {
       setIndice(0);
     } catch (err) {
       setError("Ocurrió un error al generar el documento.");
-    }
+    }  finally {
+    setCargando(false);
+  }
   };
 
   const obtenerResumen = async (datosManual = null) => {
@@ -435,7 +493,7 @@ const enviarFormulario = async (datosManual = null) => {
   for (let key in datos) {
     formData.append(key, datos[key] ?? "");
   }
-
+  setCargando(true); // justo antes de llamar al backend
   try {
     const token = localStorage.getItem("token");
     const res = await axiosInstance.post(
@@ -455,13 +513,14 @@ const enviarFormulario = async (datosManual = null) => {
       ...conversacion,
       { de: "bot", texto: "Aquí está un resumen del contenido legal del documento:" },
       { de: "bot", texto: resumenTexto },
-      { de: "bot", texto: "Generando el documento automáticamente..."}
     ]);
 
     setFase("finalizado");
     await enviarFormulario(datos);
   } catch (err) {
     setError("Error al obtener el resumen del documento.");
+  } finally {
+  setCargando(false); // ocultar animación
   }
 };
 
@@ -534,7 +593,11 @@ const enviarFormulario = async (datosManual = null) => {
                 <img src={iconDoc} alt="bot" width={40} className="me-2" />
                 {/* Burbujas de bot */}
                 <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
-                  {msg.texto}
+                  {msg.texto === "Ya se ha agregado automáticamente tu nombre y cédula profesional como abogado promovente." ? (
+                    <em style={{ fontWeight: "bold", color: "#0F4571" }}>{msg.texto}</em>
+                  ) : (
+                    msg.texto
+                  )}
                 </div>
               </div>
             ) : (
@@ -552,6 +615,17 @@ const enviarFormulario = async (datosManual = null) => {
               <img src={iconDoc} alt="bot" width={40} className="me-2" />
               <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
                 {preguntaActual.texto}
+              </div>
+            </div>
+          </div>
+        )}
+         {/* Animación de carga */}
+        {cargando && (
+          <div className="mb-3 d-flex justify-content-start">
+            <div className="d-flex align-items-start">
+              <img src={iconDoc} alt="bot" width={40} className="me-2" />
+              <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
+                <TypingDots />
               </div>
             </div>
           </div>

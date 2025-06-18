@@ -30,15 +30,15 @@ async def generar_divorcio_voluntario(
     direccion_promovente: str = Form(...),
     fecha_matrimonio: str = Form(...),
     regimen_matrimonial: str = Form(...),
-    cuantos_abogados: str = Form(...),
-    abogados: str = Form(...),
+    desea_agregar_otros_abogados: str = Form(...),
+    abogados: str = Form(None),
     bienes_comunes: str = Form(None),
     total_bienes: str = Form(None),
     lista_bienes: str = Form(None),
     tiene_hijos: str = Form(...),
     hijos_info: str = Form(None),
     quien_guarda: str = Form(None),
-    domicilio_hijos: str = Form(None),
+    direccion_hijos: str = Form(None),
     frecuencia_visitas: str = Form(None),
     horario_visitas: str = Form(None),
     porcentaje_alimentos: str = Form(None),
@@ -78,8 +78,17 @@ async def generar_divorcio_voluntario(
     doc.add_paragraph("\nC. JUEZ DE LO FAMILIAR EN TURNO DE PRIMERA INSTANCIA")
     doc.add_paragraph("DE LA CIUDAD DE MÉXICO")
     doc.add_paragraph("TRIBUNAL SUPERIOR DE JUSTICIA")
+    # --- Abogados ---
+    desea_mas = normalizar(desea_agregar_otros_abogados)
+    abogado_lista = []
 
-    abogado_lista = abogados.split(";")
+    # Agregar abogado del usuario logueado
+    abogado_lista.append(f"{usuario.nombre_completo}:{usuario.cedula_profesional}")
+
+    # Si desea agregar más, unir la lista
+    if desea_mas == "si" and abogados:
+        abogado_lista += [a.strip() for a in abogados.split(";") if a.strip()]
+
     plural = len(abogado_lista) > 1
     if plural:
         texto_abogados = ", ".join([f"{a.split(':')[0]} (Cédula {a.split(':')[1]})" for a in abogado_lista])
@@ -148,7 +157,7 @@ async def generar_divorcio_voluntario(
         if len(hijos_lista) == 1:
             nombre_unico, edad = hijos_info.split(":")
             clausulas.append(
-                f"{numerales[clausulas_num - 1]}.- La guarda y custodia de nuestro menor hijo {nombre_unico} de {edad} años quedará a cargo de {quien_guarda}, quien la ejercerá en el domicilio ubicado en {domicilio_hijos}.\n"
+                f"{numerales[clausulas_num - 1]}.- La guarda y custodia de nuestro menor hijo {nombre_unico} de {edad} años quedará a cargo de {quien_guarda}, quien la ejercerá en el domicilio ubicado en {direccion_hijos}.\n"
             )
         else:
             hijos_format = []
@@ -157,7 +166,7 @@ async def generar_divorcio_voluntario(
                 hijos_format.append(f"{nombre} de {edad} años")
             hijos_texto = "; ".join(hijos_format)
             clausulas.append(
-                f"{numerales[clausulas_num - 1]}.- La guarda y custodia de nuestros menores hijos {hijos_texto} quedará a cargo de {quien_guarda}, quien la ejercerá en el domicilio ubicado en {domicilio_hijos}.\n"
+                f"{numerales[clausulas_num - 1]}.- La guarda y custodia de nuestros menores hijos {hijos_texto} quedará a cargo de {quien_guarda}, quien la ejercerá en el domicilio ubicado en {direccion_hijos}.\n"
             )
 
         clausulas.append(

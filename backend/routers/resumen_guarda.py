@@ -15,8 +15,8 @@ async def resumen_guarda_custodia(
     menores: str = Form(...),
     demandado: str = Form(...),
     conoce_domicilio: str = Form(...),
-    domicilio_demandado: str = Form(None),
-    domicilio_demandado_no: str = Form(None),
+    direccion_demandado: str = Form(None),
+    direccion_demandado_no: str = Form(None),
     tipo_relacion: str = Form(...),
     tiempo_convivencia: str = Form(...),
     motivo_guarda: str = Form(...),
@@ -36,10 +36,10 @@ async def resumen_guarda_custodia(
         f"Motivo de la solicitud: {motivo_guarda}.\n"
     )
 
-    if conoce_domicilio.lower().strip() == "si" and domicilio_demandado:
-        resumen += f"El promovente conoce el domicilio del demandado: {domicilio_demandado}.\n"
-    elif domicilio_demandado_no:
-        resumen += f"No se conoce el domicilio exacto del demandado. Posible domicilio: {domicilio_demandado_no}.\n"
+    if conoce_domicilio.lower().strip() == "si" and direccion_demandado:
+        resumen += f"El promovente conoce el domicilio del demandado: {direccion_demandado}.\n"
+    elif direccion_demandado_no:
+        resumen += f"No se conoce el domicilio exacto del demandado. Posible domicilio: {direccion_demandado_no}.\n"
 
     if desea_visitas.lower().strip() == "si" and visitas:
         resumen += f"Se propone régimen de visitas: {visitas}.\n"

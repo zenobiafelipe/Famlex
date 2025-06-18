@@ -27,18 +27,18 @@ async def generar_divorcio_incausado(
     promovente: str = Form(...),
     demandado: str = Form(...),
     direccion_promovente: str = Form(...),
-    cuantos_abogados: str = Form(...),
-    abogados: str = Form(...),
+    desea_agregar_otros_abogados: str = Form(...),
+    abogados: str = Form(None),
     conoce_domicilio: str = Form(...),
-    domicilio_demandado_si: str = Form(None),
-    domicilio_demandado_no: str = Form(None),
+    direccion_demandado_si: str = Form(None),
+    direccion_demandado_no: str = Form(None),
     fecha_matrimonio: str = Form(...),
-    regimen: str = Form(...),
-    ultimo_domicilio: str = Form(...),
+    regimen_matrimonial: str = Form(...),
+    direccion_ultimo: str = Form(...),
     fecha_separacion: str = Form(...),
     hijos: str = Form(...),
     hijos_info: str = Form(None),
-    guarda_domicilio: str = Form(None),
+    direccion_guarda: str = Form(None),
     incluir_guardia: str = Form(None),
     guarda_titular: str = Form(None),
     incluir_alimentos: str = Form(None),
@@ -65,6 +65,11 @@ async def generar_divorcio_incausado(
     except ValueError:
         fecha_formateada = fecha_matrimonio  # fallback si la fecha viene en otro formato
 
+    try:
+        fecha_separacion_dt = datetime.datetime.strptime(fecha_separacion, "%Y-%m-%d")
+        fecha_separacion_formateada = fecha_separacion_dt.strftime("%d de %B de %Y").capitalize()
+    except ValueError:
+        fecha_separacion_formateada = fecha_separacion
     
 
     doc = Document()
@@ -75,7 +80,7 @@ async def generar_divorcio_incausado(
     alimentos_norm = normalizar(incluir_alimentos)
     proteccion = proteccion or ""
     proteccion_norm = normalizar(proteccion)
-    regimen_norm = normalizar(regimen)
+    regimen_norm = normalizar(regimen_matrimonial)
     bienes_norm = normalizar(bienes)
 
     if hijos_norm == "si":
@@ -96,7 +101,16 @@ async def generar_divorcio_incausado(
     doc.add_paragraph("DE LA CIUDAD DE MÉXICO")
     doc.add_paragraph("TRIBUNAL SUPERIOR DE JUSTICIA")
 
-    abogado_lista = abogados.split(";")
+    desea_mas = normalizar(desea_agregar_otros_abogados)
+    abogado_lista = []
+
+    # Agregar abogado del usuario logueado
+    abogado_lista.append(f"{usuario.nombre_completo}:{usuario.cedula_profesional}")
+
+    # Si desea agregar más, unir la lista
+    if desea_mas == "si" and abogados:
+        abogado_lista += [a.strip() for a in abogados.split(";") if a.strip()]
+
     plural = len(abogado_lista) > 1
     if plural:
         texto_abogados = ", ".join([f"{a.split(':')[0]} (Cédula {a.split(':')[1]})" for a in abogado_lista])
@@ -113,10 +127,10 @@ async def generar_divorcio_incausado(
     )
 
     if conoce_domicilio_norm == "si":
-        doc.add_paragraph(f"El promovente manifiesta conocer el domicilio del demandado, ubicado en {domicilio_demandado_si}.")
+        doc.add_paragraph(f"El promovente manifiesta conocer el domicilio del demandado, ubicado en {direccion_demandado_si}.")
     else:
         doc.add_paragraph(
-            f"Bajo protesta de decir verdad, desconozco su domicilio particular y para que pueda ser debidamente notificado señalo como domicilio ubicado en {domicilio_demandado_no}, "
+            f"Bajo protesta de decir verdad, desconozco su domicilio particular y para que pueda ser debidamente notificado señalo como domicilio ubicado en {direccion_demandado_no}, "
             f"y toda vez que dicho domicilio se encuentra fuera de esta jurisdicción, solicito se gire atento exhorto al C. Juez competente de primera instancia para su emplazamiento y demás efectos legales."
         )
 
@@ -154,12 +168,12 @@ async def generar_divorcio_incausado(
         num_hecho += 1
 
     doc.add_paragraph(
-        f"{num_hecho}. Establecimos nuestro último domicilio conyugal en {ultimo_domicilio}, lo que da competencia a esta H. Autoridad.\n"
+        f"{num_hecho}. Establecimos nuestro último domicilio conyugal en {direccion_ultimo}, lo que da competencia a esta H. Autoridad.\n"
     )
     num_hecho += 1
 
     doc.add_paragraph(
-        f"{num_hecho}. Desde {fecha_separacion}, nos encontramos separados de hecho, sin vida en común, situación que refleja la inexistencia de voluntad para continuar con el matrimonio.\n"
+        f"{num_hecho}. Desde {fecha_separacion_formateada}, nos encontramos separados de hecho, sin vida en común, situación que refleja la inexistencia de voluntad para continuar con el matrimonio.\n"
     )
     num_hecho += 1
 
@@ -183,7 +197,7 @@ async def generar_divorcio_incausado(
                 hijos_format.append(f"{nombre.strip()} de {edad.strip()} años")
             hijos_texto = "; ".join(hijos_format)
             doc.add_paragraph(
-                f"{clausula}.- La guarda y custodia de nuestros menores hijos {hijos_texto} quedará a cargo de {guarda_titular}, quien la ejercerá en el domicilio ubicado en {guarda_domicilio}, "
+                f"{clausula}.- La guarda y custodia de nuestros menores hijos {hijos_texto} quedará a cargo de {guarda_titular}, quien la ejercerá en el domicilio ubicado en {direccion_guarda}, "
                 f"procurando siempre el interés superior de los menores conforme a lo establecido en tratados internacionales y legislación nacional vigente.\n"
             )
             clausula += 1
@@ -196,7 +210,7 @@ async def generar_divorcio_incausado(
             nombre_unico, edad = hijos_info.strip().split(":")
             hijo_texto = f"{nombre_unico.strip()} de {edad.strip()} años"
             doc.add_paragraph(
-                f"{clausula}.- La guarda y custodia de nuestro menor hijo {hijo_texto} quedará a cargo de {guarda_titular}, quien la ejercerá en el domicilio ubicado en {guarda_domicilio}, "
+                f"{clausula}.- La guarda y custodia de nuestro menor hijo {hijo_texto} quedará a cargo de {guarda_titular}, quien la ejercerá en el domicilio ubicado en {direccion_guarda}, "
                 f"procurando siempre el interés superior del menor conforme a lo establecido en tratados internacionales y legislación nacional vigente.\n"
             )
             clausula += 1
@@ -255,7 +269,7 @@ async def generar_divorcio_incausado(
         "los hechos manifestados en esta demanda.\n"
     )
     doc.add_paragraph(
-        f"III.- LA DOCUMENTAL PÚBLICA.- Consistente en el comprobante de domicilio ubicado en {ultimo_domicilio}, como acreditación del último domicilio conyugal y competencia de este Juzgado.\n"
+        f"III.- LA DOCUMENTAL PÚBLICA.- Consistente en el comprobante de domicilio ubicado en {direccion_ultimo}, como acreditación del último domicilio conyugal y competencia de este Juzgado.\n"
     )
     doc.add_paragraph(
         "IV.- LA INSTRUMENTAL DE ACTUACIONES.- Consistente en todas aquellas piezas procesales que obren en el expediente principal o que se integren con motivo del presente juicio.\n"

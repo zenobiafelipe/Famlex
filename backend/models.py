@@ -12,6 +12,8 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
+    nombre_completo = Column(String, nullable=False)  # 👈 nuevo campo
+    cedula_profesional = Column(String, nullable=False)  # 👈 nuevo campo
     fecha_registro = Column(DateTime, default=datetime.utcnow)
 
 class Documento(Base):

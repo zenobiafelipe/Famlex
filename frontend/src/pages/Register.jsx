@@ -9,6 +9,8 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [cedula, setCedula] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -30,6 +32,14 @@ function Register() {
     });
   }, [password]);
 
+  const toTitleCase = (str) =>
+    str
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .map(word => word[0].toUpperCase() + word.slice(1))
+      .join(" ");
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -50,7 +60,8 @@ function Register() {
     }
 
     try {
-      await registrarUsuario(email, password);
+      const nombreFormateado = toTitleCase(nombre);
+      await registrarUsuario(email, password, nombreFormateado, cedula);
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.detail || "Error al registrar");
@@ -69,12 +80,33 @@ function Register() {
       }}
     >
       <img src={logo} alt="FamLex Logo" style={{ width: "350px" }} />
-
       <h2 className="mt-3 fw-bold text-primary-custom">Crea Cuenta</h2>
 
       {error && <ErrorMessage mensaje={error} />}
 
       <Form onSubmit={handleRegister} style={{ width: "100%", maxWidth: "400px" }} className="mt-3">
+        <Form.Group className="mb-3">
+          <Form.Label>Nombre completo*</Form.Label>
+          <Form.Control
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Cédula profesional*</Form.Label>
+          <Form.Control
+            type="text"
+            value={cedula}
+            onChange={(e) => setCedula(e.target.value)}
+            pattern="\d{7}"
+            title="La cédula debe contener 7 dígitos"
+            required
+          />
+        </Form.Group>
+
         <Form.Group className="mb-3">
           <Form.Label>Correo Electrónico*</Form.Label>
           <Form.Control

@@ -11,8 +11,15 @@ from routers.auth import obtener_usuario_actual
 import uuid
 import datetime
 import os
+import unicodedata
+import locale
 
 router = APIRouter()
+
+def normalizar(texto: str) -> str:
+    if not texto:
+        return ""
+    return unicodedata.normalize("NFD", texto.strip().lower()).encode("ascii", "ignore").decode("utf-8")
 
 @router.post("/generar/pension_alimenticia")
 async def generar_pension_alimenticia(
@@ -20,10 +27,10 @@ async def generar_pension_alimenticia(
     parentesco: str = Form(...),
     direccion: str = Form(...),
     demandado: str = Form(...),
-    menores: str = Form(...),
+    hijos_info: str = Form(...),
     ingresos: str = Form(...),
-    cuantos_abogados: str = Form(...),
-    abogados: str = Form(...),
+    desea_agregar_otros_abogados: str = Form(...),
+    abogados: str = Form(None),
     incumplimiento: str = Form(...),
     retroactivos: str = Form(...),
     medidas: str = Form(...),
@@ -34,12 +41,12 @@ async def generar_pension_alimenticia(
     promovente = promovente.strip().title()
     demandado = demandado.strip().title()
     
-    fecha = datetime.datetime.now().strftime("%d de %B de %Y")
+    locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
+    fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")
     ciudad = "Ciudad de México"
-    doc = Document()
 
     # --- Formateo menores ---
-    lista_menores = [m.strip() for m in menores.split(";")]
+    lista_menores = [m.strip() for m in hijos_info.split(";")]
     menores_format = []
     for menor in lista_menores:
         nombre, edad = [x.strip() for x in menor.split(":")]
@@ -48,15 +55,25 @@ async def generar_pension_alimenticia(
     plural_menores = len(menores_format) > 1
 
     # --- Abogados ---
-    abogado_lista = abogados.split(";")
-    plural_abogados = len(abogado_lista) > 1
-    if plural_abogados:
+    desea_mas = normalizar(desea_agregar_otros_abogados)
+    abogado_lista = []
+
+    # Agregar abogado del usuario logueado
+    abogado_lista.append(f"{usuario.nombre_completo}:{usuario.cedula_profesional}")
+
+    # Si desea agregar más, unir la lista
+    if desea_mas == "si" and abogados:
+        abogado_lista += [a.strip() for a in abogados.split(";") if a.strip()]
+
+    plural = len(abogado_lista) > 1
+    if plural:
         texto_abogados = ", ".join([f"{a.split(':')[0]} (Cédula {a.split(':')[1]})" for a in abogado_lista])
         autorizacion = f"a los C.C. Licenciados en Derecho {texto_abogados}"
     else:
         nombre, cedula = abogado_lista[0].split(":")
         autorizacion = f"al C. Licenciado en Derecho {nombre} (Cédula {cedula})"
 
+    doc = Document()
     # --- Encabezado ---
     header = doc.add_paragraph()
     header.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
@@ -130,7 +147,7 @@ async def generar_pension_alimenticia(
     doc.add_paragraph("Último. Dictar sentencia favorable y condenar al pago de costas.")
 
     # --- Firma ---
-    doc.add_paragraph(f"\nPROTESTO LO NECESARIO.\n{ciudad}, a {fecha}\n\n_______________________________\n{promovente.upper()}")
+    doc.add_paragraph(f"\nPROTESTO LO NECESARIO.\n{ciudad}, a {fecha_actual}\n\n_______________________________\n{promovente.upper()}")
 
     excluir_justificacion = [
         "JUICIO: PENSIÓN ALIMENTICIA",

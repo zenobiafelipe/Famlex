@@ -5,8 +5,8 @@ const API = axios.create({
 });
 
 // Registro
-export const registrarUsuario = (email, password) =>
-  API.post("/register", { email, password });
+export const registrarUsuario = (email, password, nombre_completo, cedula_profesional) =>
+  API.post("/register", { email, password, nombre_completo, cedula_profesional});
 
 // Login
 export const iniciarSesion = (email, password) =>

@@ -22,6 +22,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 class UsuarioCreate(BaseModel):
     email: str
     password: str
+    nombre_completo: str
+    cedula_profesional: str   
 
 class LoginRequest(BaseModel):
     email: str
@@ -66,7 +68,7 @@ def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="El correo ya está registrado")
 
     hashed_password = pwd_context.hash(usuario.password)
-    nuevo = Usuario(email=usuario.email, password=hashed_password)
+    nuevo = Usuario(email=usuario.email, password=hashed_password, nombre_completo=usuario.nombre_completo, cedula_profesional=usuario.cedula_profesional)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
@@ -85,4 +87,5 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/perfil")
 def obtener_perfil(usuario=Depends(obtener_usuario_actual)):
-    return {"id": usuario.id, "email": usuario.email}
+    return {"id": usuario.id, "email": usuario.email, "nombre_completo": usuario.nombre_completo, "cedula_profesional": usuario.cedula_profesional
+    }

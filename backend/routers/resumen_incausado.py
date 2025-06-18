@@ -13,23 +13,24 @@ async def resumen_divorcio_incausado(
     promovente: str = Form(...),
     demandado: str = Form(...),
     direccion_promovente: str = Form(...),
-    fecha_matrimonio: str = Form(...),
-    regimen: str = Form(...),
-    ultimo_domicilio: str = Form(...),
-    fecha_separacion: str = Form(...),
+    desea_agregar_otros_abogados: str = Form(...),
+    abogados: str = Form(None),
     conoce_domicilio: str = Form(...),
-    domicilio_demandado_si: str = Form(None),
-    domicilio_demandado_no: str = Form(None),
+    direccion_demandado_si: str = Form(None),
+    direccion_demandado_no: str = Form(None),
+    fecha_matrimonio: str = Form(...),
+    regimen_matrimonial: str = Form(...),
+    direccion_ultimo: str = Form(...),
+    fecha_separacion: str = Form(...),
     hijos: str = Form(...),
     hijos_info: str = Form(None),
+    direccion_guarda: str = Form(None),
     incluir_guardia: str = Form(None),
     guarda_titular: str = Form(None),
-    guarda_domicilio: str = Form(None),
+    incluir_alimentos: str = Form(None),
     visitas_frecuencia: str = Form(None),
     visitas_horario: str = Form(None),
-    incluir_alimentos: str = Form(None),
     porcentaje_alimentos: str = Form(None),
-    forma_pago_alimentos: str = Form(None),
     bienes: str = Form(None),
     lista_bienes: str = Form(None),
     proteccion: str = Form(None),
@@ -37,8 +38,8 @@ async def resumen_divorcio_incausado(
     db: Session = Depends(get_db)
 ):
     resumen_base = f"""
-La parte promovente, {promovente}, solicita divorcio incausado contra {demandado}, con domicilio en {domicilio_demandado_si or domicilio_demandado_no}.
-Contrajeron matrimonio el {fecha_matrimonio} bajo el régimen de {regimen}. Su último domicilio conyugal fue en {ultimo_domicilio} y están separados desde {fecha_separacion}.
+La parte promovente, {promovente}, solicita divorcio incausado contra {demandado}, con domicilio en {direccion_demandado_si or direccion_demandado_no}.
+Contrajeron matrimonio el {fecha_matrimonio} bajo el régimen de {regimen_matrimonial}. Su último domicilio conyugal fue en {direccion_ultimo} y están separados desde {fecha_separacion}.
 
 """
 
@@ -50,15 +51,11 @@ Contrajeron matrimonio el {fecha_matrimonio} bajo el régimen de {regimen}. Su �
 
     resumen_guardia = ""
     if incluir_guardia and incluir_guardia.lower().strip() == "si":
-        resumen_guardia = f"La guarda y custodia será ejercida por {guarda_titular} en el domicilio {guarda_domicilio}.\n"
+        resumen_guardia = f"La guarda y custodia será ejercida por {guarda_titular} en el domicilio {direccion_guarda}.\n"
 
     resumen_visitas = ""
     if visitas_frecuencia and visitas_horario:
         resumen_visitas = f"El régimen de visitas será cada {visitas_frecuencia}, en horario de {visitas_horario}.\n"
-
-    resumen_alimentos = ""
-    if incluir_alimentos and incluir_alimentos.lower().strip() == "si":
-        resumen_alimentos = f"Se solicita pensión alimenticia del {porcentaje_alimentos}% pagada de forma {forma_pago_alimentos}.\n"
 
     resumen_bienes = ""
     if bienes and bienes.lower().strip() == "si" and lista_bienes:
@@ -80,7 +77,6 @@ Contrajeron matrimonio el {fecha_matrimonio} bajo el régimen de {regimen}. Su �
         resumen_hijos +
         resumen_guardia +
         resumen_visitas +
-        resumen_alimentos +
         resumen_bienes +
         resumen_proteccion
     )

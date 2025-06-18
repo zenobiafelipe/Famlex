@@ -8,7 +8,7 @@ from database import get_db
 from models import Documento
 from routers.auth import obtener_usuario_actual
 import os
-import uuid
+import locale
 import datetime
 import unicodedata
 
@@ -25,12 +25,12 @@ async def generar_guarda_custodia(
     parentesco: str = Form(...),
     menores: str = Form(...),
     direccion_promovente: str = Form(...),
-    cuantos_abogados: str = Form(...),
-    abogados: str = Form(...),
+    desea_agregar_otros_abogados: str = Form(...),
+    abogados: str = Form(None),
     demandado: str = Form(...),
     conoce_domicilio: str = Form(...),
-    domicilio_demandado: str = Form(None),
-    domicilio_demandado_no: str = Form(None),
+    direccion_demandado: str = Form(None),
+    direccion_demandado_no: str = Form(None),
     tipo_relacion: str = Form(...),
     tiempo_convivencia: str = Form(...),
     motivo_guarda: str = Form(...),
@@ -44,23 +44,34 @@ async def generar_guarda_custodia(
     promovente = promovente.strip().title()
     demandado = demandado.strip().title()
 
-    ciudad = "Ciudad de Mexico"
-    fecha = datetime.datetime.now().strftime("%d de %B de %Y")
+    locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')  # español de México
+    fecha_actual = datetime.datetime.now().strftime("%d de %B de %Y")
+    ciudad = "Ciudad de México"
+
     doc = Document()
 
     menores_lista = [m.strip() for m in menores.split(";") if m.strip()]
     plural = len(menores_lista) > 1
-    menores_nombres = ", ".join([m.replace(":", " de ") + " anos" for m in menores_lista])
+    menores_nombres = ", ".join([m.replace(":", " de ") + " años" for m in menores_lista])
     menores_solo_nombres = ", ".join([m.split(":")[0] for m in menores_lista])
 
-    abogado_lista = list({a.strip() for a in abogados.split(";") if a.strip()})
-    plural_abogados = len(abogado_lista) > 1
-    if plural_abogados:
-        texto_abogados = ", ".join([f"{a.split(':')[0]} (Cedula {a.split(':')[1]})" for a in abogado_lista])
+    desea_mas = normalizar(desea_agregar_otros_abogados)
+    abogado_lista = []
+
+    # Agregar abogado del usuario logueado
+    abogado_lista.append(f"{usuario.nombre_completo}:{usuario.cedula_profesional}")
+
+    # Si desea agregar más, unir la lista
+    if desea_mas == "si" and abogados:
+        abogado_lista += [a.strip() for a in abogados.split(";") if a.strip()]
+
+    plural = len(abogado_lista) > 1
+    if plural:
+        texto_abogados = ", ".join([f"{a.split(':')[0]} (Cédula {a.split(':')[1]})" for a in abogado_lista])
         autorizacion = f"a los C.C. Licenciados en Derecho {texto_abogados}"
     else:
         nombre, cedula = abogado_lista[0].split(":")
-        autorizacion = f"al C. Licenciado en Derecho {nombre} (Cedula {cedula})"
+        autorizacion = f"al C. Licenciado en Derecho {nombre} (Cédula {cedula})"
 
     encabezado = doc.add_paragraph()
     encabezado.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
@@ -73,22 +84,22 @@ async def generar_guarda_custodia(
 
     doc.add_paragraph(
         f"{promovente}, por propio derecho y en representacion de {'los menores' if plural else 'el menor'} {menores_nombres}, "
-        f"senalando como domicilio para oir y recibir toda clase de notificaciones el ubicado en {direccion_promovente}, "
+        f"señalando como domicilio para oir y recibir toda clase de notificaciones el ubicado en {direccion_promovente}, "
         f"{autorizacion}, ante Usted con el debido respeto comparezco y expongo:\n"
     )
 
     doc.add_paragraph(
         "Que por medio del presente escrito y con fundamento en los articulos 282, 283, 287, 288 y 291 del Codigo Civil para la Ciudad de Mexico, "
         "asi como el principio de interes superior del menor contenido en tratados internacionales, vengo a demandar la guarda y custodia "
-        f"de {'los menores' if plural else 'el menor'} senalados.\n"
+        f"de {'los menores' if plural else 'el menor'} señalados.\n"
     )
 
-    if normalizar(conoce_domicilio) == "si" and domicilio_demandado:
-        doc.add_paragraph(f"El promovente manifiesta conocer el domicilio del demandado, ubicado en {domicilio_demandado}.")
-    elif domicilio_demandado_no:
+    if normalizar(conoce_domicilio) == "si" and direccion_demandado:
+        doc.add_paragraph(f"El promovente manifiesta conocer el domicilio del demandado, ubicado en {direccion_demandado}.")
+    elif direccion_demandado_no:
         doc.add_paragraph(
             f"Bajo protesta de decir verdad, manifiesto desconocer el domicilio actual del demandado, por lo que para efectos de notificacion "
-            f"senalo como posible domicilio {domicilio_demandado_no}, y solicito se gire atento exhorto al C. Juez competente de primera instancia "
+            f"senalo como posible domicilio {direccion_demandado_no}, y solicito se gire atento exhorto al C. Juez competente de primera instancia "
             f"en esa jurisdiccion para su legal emplazamiento y demas efectos legales a que haya lugar."
         )
     else:
@@ -138,7 +149,7 @@ async def generar_guarda_custodia(
         doc.add_paragraph("CUARTO. Fijar el régimen de convivencias propuesto, con o sin restricciones.")
     doc.add_paragraph("Último. Condenar al demandado al pago de costas procesales.")
 
-    doc.add_paragraph(f"\nPROTESTO LO NECESARIO.\n{ciudad}, a {fecha}\n\n_______________________________\n{promovente.upper()}")
+    doc.add_paragraph(f"\nPROTESTO LO NECESARIO.\n{ciudad}, a {fecha_actual}\n\n_______________________________\n{promovente.upper()}")
         
 
     excluir_justificacion = [

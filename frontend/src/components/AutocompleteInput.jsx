@@ -1,25 +1,34 @@
 import React, { useEffect, useRef } from "react";
+import { loadGoogleMapsScript } from "../utils/loadGoogleMapsScript";  // ajusta la ruta si es necesario
 
 export default function AutocompleteInput({ value, onChange, placeholder }) {
   const inputRef = useRef();
   const wrapperRef = useRef();
 
   useEffect(() => {
-    if (!window.google || !window.google.maps || !window.google.maps.places) return;
+    loadGoogleMapsScript();
 
-    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-      types: ["address"],
-      componentRestrictions: { country: "mx" },
-    });
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.formatted_address) {
-        onChange(place.formatted_address);
-      } else {
-        onChange(inputRef.current.value);
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+          types: ["address"],
+          componentRestrictions: { country: "mx" },
+        });
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            onChange(place.formatted_address);
+          } else {
+            onChange(inputRef.current.value);
+          }
+        });
       }
-    });
+    }, 100);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

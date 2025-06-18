@@ -14,7 +14,7 @@ async def resumen_pension_alimenticia(
     parentesco: str = Form(...),
     direccion: str = Form(...),
     demandado: str = Form(...),
-    menores: str = Form(...),
+    hijos_info: str = Form(...),
     ingresos: str = Form(...),
     incumplimiento: str = Form(...),
     retroactivos: str = Form(...),
@@ -22,7 +22,7 @@ async def resumen_pension_alimenticia(
     usuario=Depends(obtener_usuario_actual),
     db: Session = Depends(get_db)
 ):
-    menores_list = [m.strip().replace(":", " de ") + " años" for m in menores.split(";") if m.strip()]
+    menores_list = [m.strip().replace(":", " de ") + " años" for m in hijos_info.split(";") if m.strip()]
     menores_texto = "; ".join(menores_list)
 
     resumen = (
