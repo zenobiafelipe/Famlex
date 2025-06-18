@@ -97,7 +97,6 @@ export default function ChatScreen() {
 
     ],
 
-
     divorcio_incausado: [
       { campo: "promovente", texto: "Nombre del promovente:" },
       { campo: "demandado", texto: "Nombre del demandado:" },
@@ -372,6 +371,39 @@ reconocimiento_paternidad: [
   if (camposNombre.includes(preguntaActual.campo)) {
     valor = toTitleCase(valor);
   }
+  // Normaliza nombres de abogados
+  if (preguntaActual.campo === "abogados") {
+    const entradas = valor.split(";");
+    valor = entradas
+      .map(entrada => {
+        const [nombre, cedula] = entrada.split(":");
+        return `${toTitleCase(nombre.trim())}:${cedula.trim()}`;
+      })
+      .join("; ");
+  }
+
+  // Normaliza nombres de hijos
+  if (preguntaActual.campo === "hijos_info") {
+    const entradas = valor.split(";");
+    valor = entradas
+      .map(entrada => {
+        const [nombre, edad] = entrada.split(":");
+        return `${toTitleCase(nombre.trim())}:${edad.trim()}`;
+      })
+      .join("; ");
+  }
+
+  // Normaliza nombres de bienes
+  if (preguntaActual.campo === "lista_bienes") {
+    const entradas = valor.split(";");
+    valor = entradas
+      .map(entrada => {
+        const [nombreBien, porcentaje1, porcentaje2] = entrada.split(":");
+        return `${toTitleCase(nombreBien.trim())}:${porcentaje1.trim()}:${porcentaje2.trim()}`;
+      })
+      .join("; ");
+  }
+
   // Solo valida opciones si realmente existen
   if (Array.isArray(preguntaActual.opciones) && preguntaActual.opciones.length > 0) {
     const match = preguntaActual.opciones.find(opt => opt === valor);
@@ -412,18 +444,22 @@ reconocimiento_paternidad: [
   });
 
   const siguientePregunta = nuevasFiltradas[indice + 1];
-
+  // Agregar AQUI los avisos según el campo:
   if (siguientePregunta?.campo === "desea_agregar_otros_abogados") {
     nuevaConversacion.push({
       de: "bot",
       texto: "Ya se ha agregado automáticamente tu nombre y cédula profesional como abogado promovente."
     });
   }
-  // 🚀 Agregar AQUI los avisos según el campo:
   if (siguientePregunta?.campo === "abogados") {
     const aviso = "Debes escribir los abogados en el siguiente formato: Nombre:1234567; Nombre2:7654321";
     nuevaConversacion.push({ de: "bot", texto: aviso });
   }
+  if (siguientePregunta?.campo === "lista_bienes") {
+    const aviso = "Debes escribir los bienes en el siguiente formato: NombreDelBien:PorcentajePromovente:PorcentajeCónyuge";
+    nuevaConversacion.push({ de: "bot", texto: aviso });
+  }
+
 
   if (siguientePregunta?.campo === "hijos_info") {
     const aviso = "Debes escribir los hijos en el siguiente formato: Nombre:Edad; Nombre2:Edad";
@@ -443,7 +479,19 @@ reconocimiento_paternidad: [
 
 };
 
-const enviarFormulario = async (datosManual = null) => {
+const esAvisoEspecial = (texto) => {
+  if (typeof texto !== "string") return false;
+  return (
+    texto === "Ya se ha agregado automáticamente tu nombre y cédula profesional como abogado promovente." ||
+    texto.startsWith("Debes escribir los abogados en el siguiente formato") ||
+    texto.startsWith("Debes escribir los hijos en el siguiente formato") ||
+    texto.startsWith("Debes escribir los bienes en el siguiente formato: NombreDelBien:PorcentajePromovente:PorcentajeCónyuge")
+  );
+};
+
+
+
+  const enviarFormulario = async (datosManual = null) => {
   const datos = datosManual || respuestas; // usa las nuevas respuestas si las mandas
 
   const formData = new FormData();
@@ -593,7 +641,7 @@ const enviarFormulario = async (datosManual = null) => {
                 <img src={iconDoc} alt="bot" width={40} className="me-2" />
                 {/* Burbujas de bot */}
                 <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
-                  {msg.texto === "Ya se ha agregado automáticamente tu nombre y cédula profesional como abogado promovente." ? (
+                  {esAvisoEspecial(msg.texto) ? (
                     <em style={{ fontWeight: "bold", color: "#0F4571" }}>{msg.texto}</em>
                   ) : (
                     msg.texto
