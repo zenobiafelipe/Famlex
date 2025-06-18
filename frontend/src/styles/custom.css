@@ -123,3 +123,22 @@
     transform: scale(1);
   }
 }
+
+/* MAQUINA DE ESCRIBIR*/
+.typing-text {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 0.15em solid #0F4571;
+  animation: typing 6s steps(50, end) infinite, blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  0% { width: 0 }
+  50% { width: 100% }
+  100% { width: 0 }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #0F4571; }
+}

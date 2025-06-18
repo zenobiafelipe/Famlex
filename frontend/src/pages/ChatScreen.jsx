@@ -54,6 +54,7 @@ export default function ChatScreen() {
 ]);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [mensajeCarga, setMensajeCarga] = useState("");
   const [indice, setIndice] = useState(0);
   const [error, setError] = useState("");
   const endRef = useRef(null);
@@ -504,6 +505,7 @@ const esAvisoEspecial = (texto) => {
   for (let pair of formData.entries()) {
     console.log(`${pair[0]}: ${pair[1]}`);
   }
+  setMensajeCarga("Generando documento...");
   setCargando(true);
   try {
     const token = localStorage.getItem("token");
@@ -531,6 +533,7 @@ const esAvisoEspecial = (texto) => {
       setError("Ocurrió un error al generar el documento.");
     }  finally {
     setCargando(false);
+    setMensajeCarga("");
   }
   };
 
@@ -541,6 +544,7 @@ const esAvisoEspecial = (texto) => {
   for (let key in datos) {
     formData.append(key, datos[key] ?? "");
   }
+  setMensajeCarga("G E N E R A N D O  R E S U M E N . . .");
   setCargando(true); // justo antes de llamar al backend
   try {
     const token = localStorage.getItem("token");
@@ -556,7 +560,6 @@ const esAvisoEspecial = (texto) => {
 
     const resumenTexto = res.data.resumen;
 
-
     setConversacion([
       ...conversacion,
       { de: "bot", texto: "Aquí está un resumen del contenido legal del documento:" },
@@ -569,6 +572,7 @@ const esAvisoEspecial = (texto) => {
     setError("Error al obtener el resumen del documento.");
   } finally {
   setCargando(false); // ocultar animación
+  setMensajeCarga(""); // limpia después de terminar
   }
 };
 
@@ -668,16 +672,16 @@ const esAvisoEspecial = (texto) => {
           </div>
         )}
          {/* Animación de carga */}
-        {cargando && (
-          <div className="mb-3 d-flex justify-content-start">
-            <div className="d-flex align-items-start">
-              <img src={iconDoc} alt="bot" width={40} className="me-2" />
-              <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
-                <TypingDots />
+          {cargando && (
+            <div className="mb-3 d-flex justify-content-start">
+              <div className="d-flex align-items-start">
+                <img src={iconDoc} alt="bot" width={40} className="me-2" />
+                <div className="bg-white text-primary-custom p-3 rounded shadow-sm border chat-bubble">
+                  <div className="typing-text">{mensajeCarga}</div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         <div ref={endRef} />
       </div>
 
