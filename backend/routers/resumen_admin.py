@@ -36,7 +36,9 @@ async def resumen_divorcio_admin(
     prompt = f"Resume jurídicamente en un solo párrafo, usando lenguaje técnico, el siguiente escrito legal:\n{contenido_legal}\nResumen:"
 
     comando = ["ollama", "run", "gemma:2b-instruct"]
+    print (comando)
     resultado = subprocess.run(comando, input=prompt, capture_output=True, text=True)
+    print (resultado)
 
     resumen_generado = resultado.stdout.strip() if resultado.returncode == 0 else "No se pudo generar el resumen."
     subprocess.run(["ollama", "stop", "gemma:2b-instruct"])
