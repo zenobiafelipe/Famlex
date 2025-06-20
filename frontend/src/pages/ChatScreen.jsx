@@ -576,6 +576,24 @@ const esAvisoEspecial = (texto) => {
   }
 };
 
+  const handleAnterior = () => {
+    if (indice > 0) {
+      const campoAnterior = preguntas[indice - 1].campo;
+
+      // Eliminar del objeto respuestas
+      const nuevasRespuestas = { ...respuestas };
+      delete nuevasRespuestas[campoAnterior];
+
+      // Eliminar últimos 2 mensajes de la conversación (pregunta + respuesta)
+      const nuevaConversacion = conversacion.slice(0, -2);
+
+      // Actualizar estado
+      setRespuestas(nuevasRespuestas);
+      setConversacion(nuevaConversacion);
+      setIndice(indice - 1);
+    }
+  };
+
   const [documentos, setDocumentos] = useState([]);
 
   useEffect(() => {
@@ -716,11 +734,20 @@ const esAvisoEspecial = (texto) => {
           </button>
         </div>
       </form>
+       {fase === "preguntas" && (
+            <button
+              className="btn btn-secondary boton-anterior"
+              onClick={handleAnterior}
+              disabled={indice === 0}
+              type="button"
+            >
+              Regresar a la pregunta anterior
+            </button>
+          )}
     </div>
     <LegalDisclaimerModal visible={mostrarAviso} onClose={cerrarAviso} />
     <SessionExpiredModal visible={sesionExpirada} />
   </div>
-  
 );
 
 }
