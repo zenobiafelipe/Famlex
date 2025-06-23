@@ -41,6 +41,8 @@ async def resumen_pension_alimenticia(
     if medidas.lower().strip() == "sí":
         resumen += "Se solicita embargo precautorio u otra medida para garantizar el cumplimiento de la pensión.\n"
 
+    prompt = f"Resume jurídicamente en un solo párrafo, usando lenguaje técnico, el siguiente escrito legal:\n{resumen}\nResumen:"
+
     # NUEVO: llamada a la API HTTP de Ollama
     try:
         response = requests.post(

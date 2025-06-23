@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from routers.auth import obtener_usuario_actual
-import subprocess
+import requests
 
 router = APIRouter()
 
@@ -86,10 +86,21 @@ Contrajeron matrimonio el {fecha_matrimonio} bajo el régimen de {regimen_matrim
         f"{contenido_legal}\nResumen:"
     )
 
-    comando = ["ollama", "run", "gemma:2b-instruct"]
-    resultado = subprocess.run(comando, input=prompt, capture_output=True, text=True)
+    # NUEVO: llamada a la API HTTP de Ollama
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "gemma:2b-instruct",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=60
+        )
+        response.raise_for_status()
+        data = response.json()
+        resumen_generado = data.get("response", "No se pudo generar el resumen.")
+    except Exception as e:
+        resumen_generado = f"Error al generar el resumen: {str(e)}"
 
-    resumen_generado = resultado.stdout.strip() if resultado.returncode == 0 else "No se pudo generar el resumen."
-    subprocess.run(["ollama", "stop", "gemma:2b-instruct"])
     return JSONResponse({"resumen": resumen_generado})
-
